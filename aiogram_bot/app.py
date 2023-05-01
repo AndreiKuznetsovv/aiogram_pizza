@@ -1,3 +1,4 @@
+import string, json
 from os import path, environ
 
 from aiogram import Bot, types
@@ -44,8 +45,10 @@ async def pizza_place_command(message: types.Message):
 
 @dp.message_handler()
 async def echo(message: types.Message):
-    # ждем пока в потоке не появится свободного места для выполнения данной команды
-    await message.answer(message.text)
+    if {i.lower().translate(str.maketrans('', '', string.punctuation)) for i in message.text.split(' ')}\
+        .intersection(json.load(open('cenz.json'))):
+        await message.reply('Маты запрещены!')
+        await message.delete()
 
 
 
