@@ -5,9 +5,12 @@ from aiogram.dispatcher.filters import Text
 from aiogram.dispatcher.filters.state import State, StatesGroup
 
 from aiogram_bot import bot
+from aiogram_bot.db_client.sqlite3_db import db_add_command
+from aiogram_bot.keyboards import kb_admin
 
 # в моем случае 530176411
 ID = None
+
 
 class FSMAdmin(StatesGroup):
     photo = State()
@@ -20,8 +23,8 @@ class FSMAdmin(StatesGroup):
 async def make_changes_command(message: types.Message):
     global ID
     ID = message.from_user.id
-    await bot.send_message(message.from_user.id, 'Чего надобно хозяин?')  # , reply_markup=button_case_admin)
-    await message.delete()
+    await bot.send_message(message.from_user.id, 'Чего надобно хозяин?', reply_markup=kb_admin)
+    # await message.delete()
 
 
 # Начало диалога загрузки нового пункта меню
@@ -75,8 +78,7 @@ async def load_price(message: types.Message, state=FSMContext):
     async with state.proxy() as data:
         data['price'] = float(message.text)
 
-        await message.reply(str(data))
-
+    await db_add_command(state=state)
     await state.finish()
 
 
