@@ -2,21 +2,18 @@ from aiogram import Dispatcher
 from aiogram import types
 from aiogram.dispatcher import FSMContext
 from aiogram.dispatcher.filters import Text
-from aiogram.dispatcher.filters.state import State, StatesGroup
 
 from aiogram_bot import bot
-from aiogram_bot.db_client.sqlite3_db import db_add_command
+from aiogram_bot.db_client.sqlite3_db import (
+    db_add_command,
+    db_delete_command,
+    db_get_row_menu,
+)
 from aiogram_bot.keyboards import kb_admin
+from aiogram_bot.states import FSMAdmin
 
 # в моем случае 530176411
 ID = None
-
-
-class FSMAdmin(StatesGroup):
-    photo = State()
-    name = State()
-    description = State()
-    price = State()
 
 
 # Получаем ID текущего модератора
@@ -82,6 +79,34 @@ async def load_price(message: types.Message, state=FSMContext):
     await state.finish()
 
 
+async def delete_callback(callback_query: types.CallbackQuery):
+    await db_delete_command(callback_query.data.replace('del', ''))
+    await callback_query.answer(text=f'Пицца {callback_query.data.replace("del ", "")} удалена.',
+                                show_alert=True)
+    p = 1
+
+
+async def delete_item(message: types.Message):
+    if message.from_user.id == ID:
+        row_menu = await db_get_row_menu()
+        for pizza in row_menu:
+            await bot.send_photo(chat_id=message.from_user.id,
+                                 photo=pizza[0],
+                                 caption=f'Название: {pizza[1]}\n'
+                                         f'Описание: {pizza[2]}\n'
+                                         f'Цена: {pizza[3]}$'
+                                 )
+            await bot.send_message(chat_id=message.from_user.id,
+                                   text="^^^",
+                                   reply_markup=types.InlineKeyboardMarkup().add(
+                                       types.InlineKeyboardButton(
+                                           f"Удалить пиццу {pizza[1]}",
+                                           callback_data=f'del {pizza[1]}'
+                                       )
+                                   )
+                                   )
+
+
 def register_handlers_admin(dp: Dispatcher):
     dp.register_message_handler(make_changes_command, commands=['Администратор'], is_chat_admin=True)
     dp.register_message_handler(command_start, commands=['Загрузить'], state=None)
@@ -91,3 +116,5 @@ def register_handlers_admin(dp: Dispatcher):
     dp.register_message_handler(load_name, state=FSMAdmin.name)
     dp.register_message_handler(load_description, state=FSMAdmin.description)
     dp.register_message_handler(load_price, state=FSMAdmin.price)
+    dp.register_callback_query_handler(delete_callback, lambda x: x.data and x.data.startswith('del'))
+    dp.register_message_handler(delete_item, commands=['Удалить'])

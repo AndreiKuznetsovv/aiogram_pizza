@@ -1,6 +1,8 @@
 import sqlite3
-from aiogram import types
+
 from aiogram import Bot
+from aiogram import types
+
 
 def start_db():
     global conn, cur
@@ -31,3 +33,12 @@ async def db_get_menu(message: types.Message, bot: Bot):
                                      f'Описание: {pizza[2]}\n'
                                      f'Цена: {pizza[3]}$'
                              )
+
+
+async def db_get_row_menu():
+    return cur.execute('SELECT * FROM menu').fetchall()
+
+
+async def db_delete_command(data):
+    cur.execute('DELETE FROM menu WHERE name == ?', (data.strip(),))
+    conn.commit()

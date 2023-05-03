@@ -1,5 +1,4 @@
 from aiogram import types, Dispatcher
-from aiogram.types import ReplyKeyboardRemove
 
 from aiogram_bot import bot
 from aiogram_bot.db_client.sqlite3_db import db_get_menu
@@ -20,7 +19,7 @@ async def pizza_open_command(message: types.Message):
 
 
 async def pizza_place_command(message: types.Message):
-    await bot.send_message(message.from_user.id, 'ул. Колбасная 15', reply_markup=ReplyKeyboardRemove())
+    await bot.send_message(message.from_user.id, 'ул. Колбасная 15')
 
 
 async def pizza_menu_command(message: types.Message):
